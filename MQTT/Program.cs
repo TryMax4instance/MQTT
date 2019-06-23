@@ -1,22 +1,65 @@
 ﻿using MQTTnet;
 using MQTTnet.Client;
 using MQTTnet.Client.Options;
+using Newtonsoft.Json;
 using System;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace MQTT
 {
+    class GateWay
+    {
+        public Data data { get; set; }
+
+        public class Data
+        {
+            public float temperature { get; set; }
+            public float humidity { get; set; }
+            public int pressure { get; set; }
+        }
+
+        public Status status { get; set; }
+
+        public class Status
+        {
+            public string devEUI { get; set; }
+            public int rssi { get; set; }
+            public float temperature { get; set; }
+            public int battery { get; set; }
+            public DateTime date { get; set; }
+        }
+    }
+
+    class RoomStatus
+    {
+        public long Id { get; set; }
+        public int RoomNumber { get; set; }
+        public string UserId { get; set; }
+        public float Temperature { get; set; }
+        public float AirHumidity { get; set; }
+        public DateTime UpdateTime { get; set; }
+    }
+
+    class BoilerStatus
+    {
+        public long Id { get; set; }
+        public string UserId { get; set; }
+        public float HeatCarrierTemperature { get; set; }
+        public bool LeakOfGasStatus { get; set; }
+        public DateTime UpdateTime { get; set; }
+    }
+
     class Listener
     {
         static void Main(string[] args)
         {
-            Listen().Wait();
+            Listen();
 
             Console.ReadLine();
         }
 
-        public static async Task Listen()
+        public static void Listen()
         {
             var factory = new MqttFactory();
             var client = factory.CreateMqttClient();
@@ -31,24 +74,29 @@ namespace MQTT
             {
                 Console.WriteLine("### RECEIVED APPLICATION MESSAGE ###");
                 Console.WriteLine($"+ Topic = {e.ApplicationMessage.Topic}");
-                Console.WriteLine($"Content-Type = {e.ApplicationMessage.ContentType}");
                 Console.WriteLine($"+ Payload = {Encoding.UTF8.GetString(e.ApplicationMessage.Payload)}");
-                Console.WriteLine($"+ QoS = {e.ApplicationMessage.QualityOfServiceLevel}");
-                Console.WriteLine($"+ Retain = {e.ApplicationMessage.Retain}");
                 Console.WriteLine();
                 Console.WriteLine("MESSAGE RECEIVED");
+
+                Console.WriteLine("BEGIN DESERIALIZING");
+
+                var data = JsonConvert.DeserializeObject<GateWay>(Encoding.UTF8.GetString(e.ApplicationMessage.Payload));
+
+                Console.WriteLine("DESERIALIZING COMPLETE");
+
+                /*sending data to server*/
             });
 
-            client.UseConnectedHandler(async e =>
+            client.UseConnectedHandler(e =>
             {
                 Console.WriteLine("### CONNECTED WITH SERVER ###");
 
-                await client.SubscribeAsync(new TopicFilterBuilder().WithTopic("#").Build());
+                client.SubscribeAsync(new TopicFilterBuilder().WithTopic("#").Build());
 
                 Console.WriteLine("### SUBSCRIBED ###");
             });
 
-            await client.ConnectAsync(options);
+            client.ConnectAsync(options);
         }
     }
 }
