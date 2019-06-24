@@ -66,7 +66,7 @@ namespace MQTT
 
             var options = new MqttClientOptionsBuilder()
                 .WithClientId("svinoludi")
-                .WithTcpServer("192.168.0.100", 1883)
+                .WithTcpServer("192.168.43.253", 1883)
                 .WithCleanSession()
                 .Build();
 
@@ -84,7 +84,24 @@ namespace MQTT
 
                 Console.WriteLine("DESERIALIZING COMPLETE");
 
-                /*sending data to server*/
+                RoomStatus room = new RoomStatus();
+
+                switch (data.status.devEUI)
+                {
+                    case "807b859020000613": room.RoomNumber = 1; break;
+                    case "807b859020000001": room.RoomNumber = 2; break;
+                }
+
+                room.AirHumidity = data.data.humidity;
+                room.Temperature = data.data.temperature;
+                room.UpdateTime = data.status.date;
+                room.UserId = "default";
+
+                var json = JsonConvert.SerializeObject(room);
+
+                SendJSON(json);
+
+                BoilerToJSON();
             });
 
             client.UseConnectedHandler(e =>
@@ -97,6 +114,46 @@ namespace MQTT
             });
 
             client.ConnectAsync(options);
+        }
+
+        static async void SendJSON(string json)
+        {
+            try
+            {
+                var sender = new Sender();
+                await sender.SendRoom(json);
+            }
+            catch
+            {
+                Console.WriteLine("Данные не были отправлены!");
+            }
+        }
+
+        static async void SendBoilerJSON(string json)
+        {
+            try
+            {
+                var sender = new Sender();
+                await sender.SendBoiler(json);
+            }
+            catch
+            {
+                Console.WriteLine("Данные не были отправлены!");
+            }
+        }
+
+        static void BoilerToJSON()
+        {
+            BoilerStatus boilerStatus = new BoilerStatus();
+
+            boilerStatus.UserId = "default";
+            boilerStatus.LeakOfGasStatus = false;
+            boilerStatus.UpdateTime = DateTime.Now;
+            boilerStatus.HeatCarrierTemperature = (float)150;
+
+            string boilerJson = JsonConvert.SerializeObject(boilerStatus);
+
+            SendBoilerJSON(boilerJson);
         }
     }
 }
