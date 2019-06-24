@@ -89,7 +89,8 @@ namespace MQTT
                 switch (data.status.devEUI)
                 {
                     case "807b859020000613": room.RoomNumber = 1; break;
-                    case "807b859020000001": room.RoomNumber = 2; break;
+                    case "807b8590200005b2": room.RoomNumber = 2; break;
+                    case "807b559020000618": room.RoomNumber = 3;break;
                 }
 
                 room.AirHumidity = data.data.humidity;
