@@ -66,7 +66,7 @@ namespace MQTT
 
             var options = new MqttClientOptionsBuilder()
                 .WithClientId("svinoludi")
-                .WithTcpServer("192.168.43.253", 1883)
+                .WithTcpServer("192.168.43.254", 1883)
                 .WithCleanSession()
                 .Build();
 
@@ -86,11 +86,11 @@ namespace MQTT
 
                 RoomStatus room = new RoomStatus();
 
-                switch (data.status.devEUI)
+                switch (data.status.devEUI.ToUpper())
                 {
-                    case "807b859020000613": room.RoomNumber = 1; break;
-                    case "807b8590200005b2": room.RoomNumber = 2; break;
-                    case "807b559020000618": room.RoomNumber = 3;break;
+                    case "807B859020000613": room.RoomNumber = 1; break;
+                    case "807B8590200005B2": room.RoomNumber = 2; break;
+                    case "807B859020000618": room.RoomNumber = 3;break;
                 }
 
                 room.AirHumidity = data.data.humidity;
